@@ -1,89 +1,74 @@
-# Information Retrieval Project
+Cranfield Inverted Index & Boolean Search Pipeline
 
-This project implements a complete pipeline for indexing and searching the Cranfield collection, a historical aerodynamics corpus. It supports vocabulary tokenization, indexing, and Boolean query retrieval optimized using binary search and skip lists.
+This project was our group's implementation of an indexing and search engine for the Cranfield collection—a historical collection of aerodynamics research papers. The system was split into two main parts: first, parsing and building an inverted index from preprocessed text; second, running Boolean queries on the index with various optimization techniques to make retrievals faster.
 
-## 1. Indexing
 
-### Purpose
-The indexing module converts the preprocessed Cranfield text documents into an inverted index. For each unique term, the index stores a sorted postings list of document IDs containing the term.
+1. Indexing the Corpus
 
-### Input
-The indexing script expects the preprocessed Cranfield collection file:
-`Information_Retrieval_Group_Project_processed.all`
+The indexer read preprocessed Cranfield text and compiled it into an inverted index. 
 
-Each document should be formatted as follows:
-```text
+How it Worked:
+The input file was Information_Retrieval_Group_Project_processed.all. Each document in this file started with a .I <ID> header followed by a .S section containing the preprocessed tokens:
+
 .I 1
 .S
 processed tokens for document 1
-```
 
-### Approach
-1. The file is read line-by-line.
-2. Tokens for each document are collected in a set to avoid duplicate postings.
-3. When the next document starts (indicated by `.I`), the document ID is appended to the postings list of each term in the set.
-4. After reading the entire file, the terms are sorted alphabetically and written to the index file.
+Our script read this file line-by-line. To build the index, we:
+1. Accumulated all unique tokens in a document using a Python set (which naturally avoided duplicate postings for the same document).
+2. When the parser encountered the next .I header, we committed those unique tokens by appending the document's ID to each token's postings list.
+3. Once the entire corpus was parsed, we sorted the vocabulary alphabetically and wrote the index to Information_Retrieval_Group_Project_cran.index.
 
-### Output
-The index is saved to:
-`Information_Retrieval_Group_Project_cran.index`
+The generated index file started with a header line showing the total vocabulary size and the maximum document ID:
+4188, 1400
 
-The first line contains:
-`vocabulary_size, maximum_docid`
+Every line after that mapped a term to its postings list, comma-separated:
+aerodynamic 1,10,11
 
-Each subsequent line maps a term to its postings list:
-`aerodynamic 1,10,11`
-
-### Execution
-1. Place the processed Cranfield file in the project directory.
-2. Run the `makeindex` cells in the Jupyter notebook.
-3. Run the `saveindex` cells to output the index file.
-4. Run `checkindex` to verify index correctness.
+Steps to Run:
+The indexing process was run directly inside the Jupyter notebook:
+1. Made sure Information_Retrieval_Group_Project_processed.all was in the project directory.
+2. Ran the makeindex cells to build the index structure in memory.
+3. Ran the saveindex cells to save it to disk.
+4. Ran the checkindex cell to verify that the index was written correctly.
 
 
-## 2. Boolean Search & Query Retrieval
+2. Boolean Search & Query Processing
 
-### Purpose
-The search module evaluates Boolean queries on the inverted index. It supports single-term searches and two-term AND/OR queries.
+Once the index was built, Boolean queries could be run against it. The search engine supported single-term lookups as well as two-term queries using AND or OR operators.
 
-### Usage
-Run the search script from the command line:
-```bash
+How to Run Queries:
+Queries were executed using the search script from the command line:
+
 python3 Information_Retrieval_Group_Project_search.py "<query>" <query_id>
-```
-Example:
-```bash
+
+For example:
 python3 Information_Retrieval_Group_Project_search.py "aerodynamic AND slipstream" q1
-```
-The results are written to a file named `<query_id>.txt` containing one matching document ID per line.
 
-### Evaluation Algorithms
-To optimize search speed, three merge algorithms were implemented and compared:
+This saved the matching document IDs to <query_id>.txt (e.g., q1.txt), with one document ID per line.
 
-1. **Two-Pointer Merge**:
-   * Scans both postings lists linearly in O(|A|+|B|) time.
-   * Best for lists of similar size.
+Optimization Algorithms:
+To speed up query evaluation, we implemented and compared three different search strategies:
 
-2. **Optimized Binary Search**:
-   * Iterates through the smaller list and binary-searches each ID in the larger list.
-   * Uses a range-narrowing optimization (lo=left) to avoid searching from the start of the list repeatedly.
-   * Runs in O(|A|*log|B|) time. Perfect for highly asymmetric lists (|A|<<|B|).
+* Two-Pointer Merge: This was our baseline. It scanned both postings lists linearly. It ran in O(|A| + |B|) time, which made it ideal if both lists were roughly the same size.
 
-3. **Skip Pointers**:
-   * Traverses lists linearly but checks skip targets placed at intervals of sqrt(L).
-   * Allows jumping over large segments of the postings list during intersection.
-   * Runs in O(|A|+|B|) worst-case, but is much faster on average queries.
-   * Only applicable to AND queries (skipping is logically impossible for OR queries because union requires visiting every element).
+* Optimized Binary Search: Instead of scanning linearly, we iterated through the smaller list and performed a binary search for each document ID in the larger list. We optimized this by passing the current index as the lo boundary (using lo=left in Python's bisect), preventing the search from starting at the beginning of the list each time. This ran in O(|A| log |B|) and was incredibly fast for highly asymmetric lists.
+
+* Skip Pointers: We added skip pointers to the postings lists at intervals of sqrt(L). While doing a linear scan, we could jump ahead if the skip target was smaller than or equal to the document ID we were matching. This ran in O(|A| + |B|) worst-case but skipped massive segments in practice. Note that this only worked for AND queries, as OR (union) queries required us to visit every single document anyway.
 
 
-## 3. Benchmarks & Performance
-A comparison benchmark is included in the notebook to compare the execution times of the merge algorithms over 10,000 runs using the terms 'abbrevi' (size 1) and 'flow' (size 730).
+3. Benchmarks & Results
 
-### Results
-* **AND intersection**:
-  * Two-pointer merge: ~0.075 seconds
-  * Optimized Binary: ~0.0028 seconds (Speedup: ~26.4x)
-  * Skip Pointer merge: ~0.060 seconds (Speedup: ~1.2x)
-* **OR union**:
-  * Two-pointer merge: ~0.427 seconds
-  * Binary Insertion: ~0.007 seconds (Speedup: ~56.4x)
+We set up a benchmark in the notebook to compare the performance of these algorithms by running the same query 10,000 times using the terms 'abbrevi' (1 document) and 'flow' (730 documents).
+
+Performance Metrics:
+* AND Intersection:
+  - Two-Pointer baseline: ~0.065 seconds
+  - Optimized Binary: ~0.0027 seconds (~24.4x speedup)
+  - Skip Pointer merge: ~0.041 seconds (~1.5x speedup)
+
+* OR Union:
+  - Two-Pointer baseline: ~0.416 seconds
+  - Binary Insertion: ~0.007 seconds (~55.2x speedup)
+
+Because of the massive difference in postings list sizes (1 vs 730), the binary search approach yielded the best speedup since it only had to do a single binary search, avoiding a full linear scan of the 730-document postings list.
