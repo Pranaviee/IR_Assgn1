@@ -46,6 +46,7 @@ The indexing process was run directly inside the Jupyter notebook:
 4. Ran the checkindex cell to verify that the index was written correctly.
 
 
+
 3. Boolean Search & Query Processing
 
 Once the index was built, Boolean queries could be run against it. The search engine supported single-term lookups as well as two-term queries using AND or OR operators.
