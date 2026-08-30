@@ -2,7 +2,7 @@ Cranfield Inverted Index & Boolean Search Pipeline
 
 This project was our group's implementation of an indexing and search engine for the Cranfield collection—a historical collection of aerodynamics research papers. The system was split into two main parts: first, parsing and building an inverted index from preprocessed text; second, running Boolean queries on the index with various optimization techniques to make retrievals faster.
 
-1.Preprocessing the corpus
+## 1.Preprocessing the corpus
 
 Before creating the inverted index, we processed the original Cranfield collection to prepare the document text for indexing. The raw collection was stored in cran.all and contained 1400 documents. Each document used tags to identify different fields, including the document ID (.I), authors (.A), title (.T), and abstract (.W).
 
@@ -16,7 +16,7 @@ The preprocessing program read the cran.all file and processed the documents one
 
 4.Stemming: The remaining words were reduced to their stems using the Porter Stemmer. This helped group related forms of a word under a common representation.
 
-2. Indexing the Corpus
+## 2. Indexing the Corpus
 
 The indexer read preprocessed Cranfield text and compiled it into an inverted index. 
 
@@ -47,7 +47,7 @@ The indexing process was run directly inside the Jupyter notebook:
 
 
 
-3. Boolean Search & Query Processing
+## 3. Boolean Search & Query Processing
 
 Once the index was built, Boolean queries could be run against it. The search engine supported single-term lookups as well as two-term queries using AND or OR operators.
 
@@ -71,7 +71,7 @@ To speed up query evaluation, we implemented and compared three different search
 * Skip Pointers: We added skip pointers to the postings lists at intervals of sqrt(L). While doing a linear scan, we could jump ahead if the skip target was smaller than or equal to the document ID we were matching. This ran in O(|A| + |B|) worst-case but skipped massive segments in practice. Note that this only worked for AND queries, as OR (union) queries required us to visit every single document anyway.
 
 
-4. Benchmarks & Results
+## 4. Benchmarks & Results
 
 We set up a benchmark in the notebook to compare the performance of these algorithms by running the same query 10,000 times using the terms 'abbrevi' (1 document) and 'flow' (730 documents).
 
