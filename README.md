@@ -9,8 +9,11 @@ Before creating the inverted index, we processed the original Cranfield collecti
 The preprocessing program read the cran.all file and processed the documents one at a time. For each document, we collected the text appearing under the .T and .W sections and applied four preprocessing steps:
 
 1.Tokenization: The text was split into individual word tokens. A regular expression was used to extract alphabetic words and remove punctuation and other non-alphabetic characters.
+
 2.Normalization: All tokens were converted to lowercase so that different capitalizations of the same word were treated as a single term.
+
 3.Stop Word Removal: Common words with little value for retrieval were removed using the provided stop-word list.
+
 4.Stemming: The remaining words were reduced to their stems using the Porter Stemmer. This helped group related forms of a word under a common representation.
 
 2. Indexing the Corpus
