@@ -2,6 +2,45 @@ Cranfield Inverted Index & Boolean Search Pipeline
 
 This project was our group's implementation of an indexing and search engine for the Cranfield collection—a historical collection of aerodynamics research papers. The system was split into two main parts: first, parsing and building an inverted index from preprocessed text; second, running Boolean queries on the index with various optimization techniques to make retrievals faster.
 
+How to Run Queries:
+
+Queries are run directly inside the Jupyter Notebook (`Information_Retrieval_Group_Project_Assignment1.ipynb`):
+1. For running a single query, run the search testing cell (cell number 8) by changing the query in `execute_query("your query", "output_filename")`. The matching document IDs will print directly to the console.
+or run the cell number 15 to check for the single query where you can get the ouput in the console
+2. If you want to check for the `sample_queries.md` formatted file, run the verification cell (cell number 16). The results will be printed to the file `result.txt`.
+
+## .py file  vs.  Notebook
+
+### 1. Jupyter Notebook (`Information_Retrieval_Group_Project_Assignment1.ipynb`)
+Contains the complete end-to-end pipeline:
+* **Preprocessing:** Tokenizes, stems, removes stop words, and normalizes the Cranfield documents, writing the preprocessed corpus to `Information_Retrieval_Group_Project_processed.all`.
+* **Indexing:** Compiles the inverted index, sorting it alphabetically, and writing it to `Information_Retrieval_Group_Project_cran.index`.
+* **Search & Benchmarking:** Implements, evaluates, and compares performance speedups for the baseline two-pointer merge, optimized binary search, and skip pointer search algorithms.
+* **Testing & Verification:** Supports single-query runs via the testing cell (cell 8 or cell 15) and runs batch verification of all sample queries from `sample_queries.md` in cell 16, writing detailed matching results directly to `result.txt`.
+
+### 2. Standalone Search Script (`Information_Retrieval_Group_Project_search.py`)
+Contains only the core search and query processing code. It is designed to let users run individual search queries directly from the command line on the compiled index file.
+
+### How to Test
+
+* **To test in the Jupyter Notebook:**
+  1. Open `Information_Retrieval_Group_Project_Assignment1.ipynb` in your Jupyter environment.
+  2. Run the cells sequentially to build or load the index.
+  3. Change the parameters of `execute_query("<query>", "<output_file>")` in cell 8 or run cell 15 to print search outputs directly in the notebook console.
+  4. Run cell 16 to verify all benchmark queries and write the detailed matching output to `result.txt`.
+
+* **To test in the Command Line (via standalone script):**
+  1. Open a terminal and navigate to the project directory.
+  2. Execute the script with the query (enclosed in double quotes) and a query ID (which names the output file):
+     ```bash
+     python3 Information_Retrieval_Group_Project_search.py "<your query>" <query_id>
+     ```
+     For example:
+     ```bash
+     python3 Information_Retrieval_Group_Project_search.py "aerodynamic AND slipstream" q1
+     ```
+     The matching document IDs will print directly to the terminal, and the list of document IDs will be written to `<query_id>.txt` (e.g., `q1.txt`).
+
 ## 1.Preprocessing the corpus
 
 Before creating the inverted index, we processed the original Cranfield collection to prepare the document text for indexing. The raw collection was stored in cran.all and contained 1400 documents. Each document used tags to identify different fields, including the document ID (.I), authors (.A), title (.T), and abstract (.W).
@@ -50,16 +89,6 @@ The indexing process was run directly inside the Jupyter notebook:
 ## 3. Boolean Search & Query Processing
 
 Once the index was built, Boolean queries could be run against it. The search engine supported single-term lookups as well as two-term queries using AND or OR operators.
-
-How to Run Queries:
-Queries were executed using the search script from the command line:
-
-python3 Information_Retrieval_Group_Project_search.py "<query>" <query_id>
-
-For example:
-python3 Information_Retrieval_Group_Project_search.py "aerodynamic AND slipstream" q1
-
-This saved the matching document IDs to <query_id>.txt (e.g., q1.txt), with one document ID per line.
 
 Optimization Algorithms:
 To speed up query evaluation, we implemented and compared three different search strategies:

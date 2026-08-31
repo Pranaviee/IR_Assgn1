@@ -2,37 +2,40 @@ import sys
 import re
 from nltk.stem import PorterStemmer
 
-# Splits text into word tokens (reused from notebook)
+# Global index map to align with the notebook's global scope function signatures
+idx_map = {}
+
+# Splits text into word tokens
 def tokenize(text):
-    # Return alphabetic tokens from the given text.
+    """Return alphabetic tokens from the given text."""
     tokens=re.findall(r"[A-Za-z]+",text)
     return tokens
 
-# Converts tokens to lowercase (reused from notebook)
-def normalize(tokens):
-    # Convert every token to lowercase.
-    return [token.lower() for token in tokens]
+# Applies Porter stemming
+def stem(tokens,stemmer):
+    """Stem every token."""
+    stemmed_tokens=[]
+    for token in tokens:
+        stemmed_tokens.append(stemmer.stem(token))
+    return stemmed_tokens
 
-# Removes stop words (reused from notebook)
+# Removes stop words
 def remove_stopwords(tokens,stopwords):
-    # Remove tokens present in the stop-word set.
+    """Remove tokens present in the stop-word set."""
     result=[]
     for token in tokens:
         if token not in stopwords:
             result.append(token)
     return result
 
-# Applies Porter stemming (reused from notebook)
-def stem(tokens,stemmer):
-    # Stem every token.
-    stemmed_tokens=[]
-    for token in tokens:
-        stemmed_tokens.append(stemmer.stem(token))
-    return stemmed_tokens
+# Converts tokens to lowercase
+def normalize(tokens):
+    """Convert every token to lowercase."""
+    return [token.lower() for token in tokens]
 
-# Loads stop words from the file (reused from notebook)
+# Loads stop words from the file
 def load_stopwords(filename):
-    # Load one stop word from each line.
+    """Load one stop word from each line."""
     stopwords=set()
     try:
         with open(filename,"r",encoding="utf-8") as file:
@@ -66,9 +69,8 @@ def load_idx(filename):
         sys.exit(1)
     return idx
 
-# Two-pointer postings intersection (AND)
 def intersect_postings(a_list,b_list):
-    # Two-pointer merge for finding common docs
+    # two-pointer merge for finding common docs
     i,j=0,0
     hits=[]
     while i<len(a_list) and j<len(b_list):
@@ -82,9 +84,8 @@ def intersect_postings(a_list,b_list):
             j+=1
     return hits
 
-# Two-pointer postings union (OR)
 def union_postings(a_list,b_list):
-    # Two-pointer merge for finding all docs.
+    # two-pointer merge for finding all docs.
     i,j=0,0
     hits=[]
     while i<len(a_list) and j<len(b_list):
@@ -106,23 +107,21 @@ def union_postings(a_list,b_list):
         j+=1
     return hits
 
-# Preprocess a single query term
 def process_term(term,stemmer,sw_set):
-    # Normalize, strip stopwords, and stem a query term.
+    # normalize, strip stopwords, and stem a query term.
     parts=tokenize(term)
     parts=normalize(parts)
     parts=remove_stopwords(parts,sw_set)
     parts=stem(parts,stemmer)
     return parts
 
-# Parses and searches the query
-def run_query(q_str,idx_map,stemmer,sw_set):
-    # Parse and execute a simple Boolean query.
+# parse and execute a simple Boolean query.
+def run_query(q_str,stemmer,sw_set):
     parts=q_str.strip().split()
     if not parts:
         return []
     
-    # Single term query
+    # single term query
     if len(parts)==1:
         word=parts[0]
         tokens=process_term(word,stemmer,sw_set)
@@ -130,7 +129,7 @@ def run_query(q_str,idx_map,stemmer,sw_set):
             return []
         return idx_map.get(tokens[0],[])
         
-    # Two-term AND/OR query
+    # two-term AND/OR query
     elif len(parts)==3:
         term1,op,term2=parts
         op=op.upper()
@@ -152,6 +151,7 @@ def run_query(q_str,idx_map,stemmer,sw_set):
         raise ValueError("Invalid query format")
 
 def main():
+    global idx_map
     if len(sys.argv)!=3:
         print("Usage: python3 Information_Retrieval_Group_Project_search.py <query> <query_id>")
         print("Example: python3 Information_Retrieval_Group_Project_search.py \"aerodynamic AND slipstream\" q1")
@@ -167,7 +167,7 @@ def main():
     idx_map=load_idx(index_file)
     
     try:
-        results=run_query(query,idx_map,stemmer,stopwords_set)
+        results=run_query(query,stemmer,stopwords_set)
     except ValueError as e:
         print(f"[ERROR] {e}")
         sys.exit(1)
@@ -175,9 +175,12 @@ def main():
     output_filename=f"{q_id}.txt"
     with open(output_filename,"w",encoding="utf-8") as outfile:
         for docid in results:
-            outfile.write(f"{docid}\\n")
+            outfile.write(f"{docid}\n")
             
-    print(f"[SUCCESS] Query: '{query}' | Match count: {len(results)} | Output: {output_filename}")
+    print(f"Query: '{query}'")
+    print(f"Match count: {len(results)}")
+    print(f"Matching Document IDs: {', '.join(map(str, results))}")
+    print(f"Output saved to: {output_filename}")
 
 if __name__ == "__main__":
     main()
