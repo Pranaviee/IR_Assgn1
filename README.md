@@ -18,7 +18,7 @@ Contains the complete end-to-end pipeline:
 * **Search & Benchmarking:** Implements, evaluates, and compares performance speedups for the baseline two-pointer merge, optimized binary search, and skip pointer search algorithms.
 * **Testing & Verification:** Supports single-query runs via the testing cell (cell 8 or cell 15) and runs batch verification of all sample queries from `sample_queries.md` in cell 16, writing detailed matching results directly to `result.txt`.
 
-### 2. Standalone Search Script (`Information_Retrieval_Group_Project_search.py`)
+### 2. Python Search Script (`Information_Retrieval_Group_Project_search.py`)
 Contains only the core search and query processing code. It is designed to let users run individual search queries directly from the command line on the compiled index file.
 
 ### How to Test
